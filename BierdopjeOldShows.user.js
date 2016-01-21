@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bierdopje Old Shows
 // @namespace    http://www.bierdopje.com/
-// @version      1.0
+// @version      1.1
 // @description  Adds a menu which loads includes a brand new page for the older (finished) shows.
 // @match        http://*.bierdopje.com/shows
 // @match        http://*.bierdopje.com/shows/
@@ -17,6 +17,7 @@
 // ==/UserScript==
 
 $(function() {
+    var BD_API_URL = 'https://bierdopje-api.houtevelts.com';
     var sourceURL = 'http://www.bierdopje.com/forum/algemene-tv-talk/topic/18769-Open-Gesloten-Einde-Afgelopen-Serie/1';
     var postId = '#post-336431';
     
@@ -60,16 +61,20 @@ $(function() {
                     var currentURL     = this.href;
 
                     if (currentURL.indexOf("shows/") > -1) {
-                        var showName       = this.text;
-                        var showRuntime    = '-';
-                        var showSeasons    = '-';
-                        var showEpisodes   = '-';
-                        var showStatus     = 'Afgelopen';
-                        var showScore      = '-';
-                        var showFavourites = '-';
+                        var n              = currentURL.lastIndexOf('shows/');
+                        var linkName       = currentURL.substring(n + 6);
+                        $.getJSON(BD_API_URL + '/GetShowByLinkName/' + linkName, function(show) {
+                            var showName       = show.name;
+                            var showRuntime    = show.runtime;
+                            var showSeasons    = show.seasons;
+                            var showEpisodes   = show.episodes;
+                            var showStatus     = 'Afgelopen'; //show.showstatus
+                            var showScore      = show.score;
+                            var showFavourites = show.favorites;
 
-                        var tableRow = '<tr><td><a href="' + currentURL + '">' + showName + '</a></td><td>' + showRuntime + '</td><td>' + showSeasons + '</td><td>' + showEpisodes + '</td><td>' + showStatus + '</td><td>' + showScore + '</td><td>' + showFavourites + '</td></tr>';
-                        tableData.append(tableRow);
+                            var tableRow = '<tr><td><a href="' + currentURL + '">' + showName + '</a></td><td>' + showRuntime + '</td><td>' + showSeasons + '</td><td>' + showEpisodes + '</td><td>' + showStatus + '</td><td>' + showScore + '</td><td>' + showFavourites + '</td></tr>';
+                            tableData.append(tableRow);
+                        });
                     }
                 });
             }
