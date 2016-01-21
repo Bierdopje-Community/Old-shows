@@ -1,0 +1,4 @@
+Bierdopje Old Shows Changelog
+
+Version 1.0 (21 January 2016)
+First release.
