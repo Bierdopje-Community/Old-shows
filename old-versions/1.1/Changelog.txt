@@ -1,0 +1,7 @@
+Bierdopje Old Shows Changelog
+
+Version 1.1 (22 January 2016)
+- Used Houtevelts Bierdopje API to quickly get show information.
+
+Version 1.0 (21 January 2016)
+First release.

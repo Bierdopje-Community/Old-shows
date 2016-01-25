@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bierdopje Old Shows
 // @namespace    http://www.bierdopje.com/
-// @version      2.0
+// @version      1.2c
 // @description  Adds a menu which loads includes a brand new page for the older (finished) shows.
 // @match        http://*.bierdopje.com/shows
 // @match        http://*.bierdopje.com/shows/
@@ -10,7 +10,7 @@
 // @match        http://*.bierdopje.com/shows/new/
 // @match        http://*.bierdopje.com/shows/finished
 // @match        http://*.bierdopje.com/shows/finished/
-// @match        http://*.bierdopje.com/shows/finished/*
+// @match        http://*.bierdopje.com/shows/finished/page/*
 // @run-at       document-start
 // @grant        unsafeWindow
 // @require      http://code.jquery.com/jquery-1.10.2.js
@@ -43,7 +43,6 @@ $(function() {
     
     // Add finished series content
     if (window.location.href.indexOf("finished") > -1) {
-        var prefix             = getCurrentPrefixFromURL();
         var currentPage        = getCurrentPageFromURL();
         var clear              = '<div class="clear">&nbsp;</div>';
         var finishedHeaderText = '<h3>Alle <u>afgelopen</u> series</h3>';
@@ -51,55 +50,52 @@ $(function() {
         contentDiv.find('div').replaceWith(finishedHeaderText);
         
         // Raw data
-        var letterPaginationStart = '<div class="rightfloat" style="width: 620px;"><ul id="pagination" class="letterPagination">';
-        var letterPaginationEnd   = '</ul></div>';
+        var paginationStart = '<ul id="pagination">';
+        var paginationEnd   = '</ul>';
         
-        var paginationStart       = '<ul id="pagination" class="numberPagination">';
-        var paginationEnd         = '</ul>';
+        var tableStart   = '<table id="startShowTable" class="listing form" cellspacing="0"><colgroup><col style="width:20%;"><col style="width:5%;"><col style="width:6%;"><col style="width:6%;"><col style="width:8%;"><col style="width:6%;"><col style="width:6%;"></colgroup><tbody id="tableData">';
+        var tableHeaders = '<tr id="tableHeader"><th class="bluerow">Naam</th><th class="bluerow">Runtime</th><th class="bluerow"># Seizoenen</th><th class="bluerow"># Afleveringen</th><th class="bluerow">Status</th><th class="bluerow">Score</th><th class="bluerow"># Favorieten</th></tr>';
+        var tableEnd     = '</tbody></table>';
         
-        var tableStart            = '<table id="startShowTable" class="listing form" cellspacing="0"><colgroup><col style="width:20%;"><col style="width:5%;"><col style="width:6%;"><col style="width:6%;"><col style="width:8%;"><col style="width:6%;"><col style="width:6%;"></colgroup><tbody id="tableData">';
-        var tableHeaders          = '<tr id="tableHeader"><th class="bluerow">Naam</th><th class="bluerow">Runtime</th><th class="bluerow"># Seizoenen</th><th class="bluerow"># Afleveringen</th><th class="bluerow">Status</th><th class="bluerow">Score</th><th class="bluerow"># Favorieten</th></tr>';
-        var tableEnd              = '</tbody></table>';
+        var loadingRow = '<tr id="loadingRows"><td colspan="7" style="text-align: center;"><img src="http://cdn.bierdopje.eu/g/if/facebox/loading.gif" style="vertical-align: middle;" />&nbsp;&nbsp;&nbsp;<span style="vertical-align: middle;">Series laden...</span></td></tr>';
         
-        var loadingRow            = '<tr id="loadingRows"><td colspan="7" style="text-align: center;"><img src="http://cdn.bierdopje.eu/g/if/facebox/loading.gif" style="vertical-align: middle;" />&nbsp;&nbsp;&nbsp;<span style="vertical-align: middle;">Series laden...</span></td></tr>';
-        
-        contentDiv.append(letterPaginationStart);
-        contentDiv.append(letterPaginationEnd);
         contentDiv.append(paginationStart);
         contentDiv.append(paginationEnd);
         contentDiv.append(tableStart);
         
         // Data accessors after insertion
-        var letterPaginationData = $(".letterPagination");
-        var paginationData       = $(".numberPagination");
-        var startShowTable       = $("#startShowTable");
-        var tableData            = $('#tableData');
+        var paginationData  = $("#pagination");
+        var startShowTable  = $("#startShowTable");
+        var tableData       = $('#tableData');
         
         tableData.append(tableHeaders);
         tableData.append(loadingRow);
         
         var loading = $("#loadingRows");
         
-        getData(currentPage, prefix);
+        getData(currentPage);
         
         // Button event handlers
+        paginationData.on('click', '.changePage', function(e) {
+            e.preventDefault(); // Prevent going to the top of the page.
+            
+            paginationData.each(function(index, value){ $(this).html(''); });
+            $(".show").each(function(index, value) { 
+                $(this).remove();
+            });
+            
+            loading.show();
+            
+            var page = $(this).data('page');
+            getData(page);
+        });
+        
         tableData.on('click', '.getShow', function(e) {
             e.preventDefault(); // Prevent going to the top of the page.
             
             var tvdbid = $(this).data('tvdbid');
             getShowURL(tvdbid);
         });
-    }
-    
-    function getCurrentPrefixFromURL() {
-        if (window.location.href.indexOf("/finished/") > -1) {
-            var url = window.location.href;
-            var reg = /finished\/(?!page)([a-z|A-Z|0-9])/.exec(url);
-            if (reg) {
-                return reg[1];
-            }
-        }
-        return "";
     }
     
     function getCurrentPageFromURL() {
@@ -117,23 +113,18 @@ $(function() {
         return 1;
     }
     
-    function getData(page, prefix) {
+    
+    function getData(page) {
         currentPage = page;
         
         $.getJSON(sourceJSON, function(showData) {
-            // Use LINQ to get only the prefix data
-            showData = Enumerable.From(showData)
-                .Where(function (x) { return startsWith(x.name, prefix) })
-                .OrderBy(function (x) { return x.name })
-                .ToArray();
             var showCount = Object.keys(showData).length;
             var pages     = getPageAmount(showCount);
             
             console.log("Great! I've found " + showCount + " shows.");
-            console.log("Will be putting that on " + pages + " page(s). " + SHOWS_PER_PAGE + " on each page.");
+            console.log("Will be putting that on " + pages + " pages. " + SHOWS_PER_PAGE + " on each page.");
             
-            addLetterPagination(prefix);
-            addPagination(prefix, pages);
+            addPagination(pages);
             
             console.log("Crushing all that show data now. Just for you!");
             
@@ -170,57 +161,13 @@ $(function() {
         tableData.append(tableEnd);
     }
     
-    function startsWith(str, prefix) {
-        // Special
-        if (prefix === "0") {
-            if (!isNaN(+str.charAt(0))) {
-                return str;
-            }
-        }
-        
-        str = str.toLowerCase();
-        prefix = prefix.toLowerCase();
-        
-        if (str.indexOf(prefix) === 0) {
-            return str;
-        }
-        return "";
-    }
-    
-    function addLetterPagination(prefix) {
-        var letterArray = ["0-9", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "Alle"];
-        $.each(letterArray, function(index, value) {
-            // Handle specials
-            if (index === 0) {
-                if (prefix === "0") {
-                    prefix = letterArray[0];
-                    letterPaginationData.append('<li class="active">' + prefix + '</li>');
-                } else {
-                    letterPaginationData.append('<li><a href="/shows/finished/0">' + letterArray[0] + '</a></li>');
-                }
-            } else if (index === letterArray.length - 1) {
-                if (!prefix) {
-                    letterPaginationData.append('<li class="active">' + letterArray[index] + '</li>');
-                } else {
-                    letterPaginationData.append('<li><a href="/shows/finished/">' + letterArray[index] + '</a></li>');
-                }
-            } else {
-                if (value === prefix) {
-                    letterPaginationData.append('<li class="active">' + value.toUpperCase() + '</li>');
-                } else {
-                    letterPaginationData.append('<li><a data-letterpage="' + value + '" class="changeLetterPage" href="/shows/finished/' + value + '">' + value.toUpperCase() + '</a></li>');
-                }
-            }
-        });
-    }
-    
-    function addPagination(prefix, pages) {
+    function addPagination(pages) {
         var FIRST_LAST_ITEMS = Math.round(PAGINATION_ITEMS / 2);
             
         // First FIRST_LAST_ITEMS pages
         for (var i = 1; i <= FIRST_LAST_ITEMS; i++) {
             if (i <= pages) {
-                addPaginationItem(prefix, i);
+                addPaginationItem(i);
             } else {
                 break;
             }
@@ -233,7 +180,7 @@ $(function() {
             }
             for (var i = (currentPage - FIRST_LAST_ITEMS) + 1 ; i < (currentPage + FIRST_LAST_ITEMS); i++) {
                 if (i > FIRST_LAST_ITEMS && i < (pages - FIRST_LAST_ITEMS) + 1) {
-                    addPaginationItem(prefix, i);
+                    addPaginationItem(i);
                 }
             }
 
@@ -245,7 +192,7 @@ $(function() {
         // Last FIRST_LAST_ITEMS pages
         for (var i = (pages - FIRST_LAST_ITEMS) + 1; i <= pages; i++) {
             if (i >= FIRST_LAST_ITEMS + 1) {
-                addPaginationItem(prefix, i);
+                addPaginationItem(i);
             }
         }
 
@@ -254,15 +201,11 @@ $(function() {
         startShowTable.after(paginationData.clone());
     }
     
-    function addPaginationItem(prefix, i) {
+    function addPaginationItem(i) {
         if (i === currentPage) {
             paginationData.append('<li class="active">' + i + '</li>');
         } else {
-            if (prefix) {
-                paginationData.append('<li><a data-page="' + i + '" class="changePage" href="/shows/finished/' + prefix + '/page/' + i + '">' + i + '</a></li>');
-            } else {
-                paginationData.append('<li><a data-page="' + i + '" class="changePage" href="/shows/finished/page/' + i + '">' + i + '</a></li>');
-            }
+            paginationData.append('<li><a data-page="' + i + '" class="changePage" href="/shows/finished/page/' + i + '">' + i + '</a></li>');
         }
     }
     

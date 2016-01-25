@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bierdopje Old Shows
 // @namespace    http://www.bierdopje.com/
-// @version      2.0
+// @version      1.2d
 // @description  Adds a menu which loads includes a brand new page for the older (finished) shows.
 // @match        http://*.bierdopje.com/shows
 // @match        http://*.bierdopje.com/shows/
@@ -51,29 +51,23 @@ $(function() {
         contentDiv.find('div').replaceWith(finishedHeaderText);
         
         // Raw data
-        var letterPaginationStart = '<div class="rightfloat" style="width: 620px;"><ul id="pagination" class="letterPagination">';
-        var letterPaginationEnd   = '</ul></div>';
+        var paginationStart = '<ul id="pagination">';
+        var paginationEnd   = '</ul>';
         
-        var paginationStart       = '<ul id="pagination" class="numberPagination">';
-        var paginationEnd         = '</ul>';
+        var tableStart   = '<table id="startShowTable" class="listing form" cellspacing="0"><colgroup><col style="width:20%;"><col style="width:5%;"><col style="width:6%;"><col style="width:6%;"><col style="width:8%;"><col style="width:6%;"><col style="width:6%;"></colgroup><tbody id="tableData">';
+        var tableHeaders = '<tr id="tableHeader"><th class="bluerow">Naam</th><th class="bluerow">Runtime</th><th class="bluerow"># Seizoenen</th><th class="bluerow"># Afleveringen</th><th class="bluerow">Status</th><th class="bluerow">Score</th><th class="bluerow"># Favorieten</th></tr>';
+        var tableEnd     = '</tbody></table>';
         
-        var tableStart            = '<table id="startShowTable" class="listing form" cellspacing="0"><colgroup><col style="width:20%;"><col style="width:5%;"><col style="width:6%;"><col style="width:6%;"><col style="width:8%;"><col style="width:6%;"><col style="width:6%;"></colgroup><tbody id="tableData">';
-        var tableHeaders          = '<tr id="tableHeader"><th class="bluerow">Naam</th><th class="bluerow">Runtime</th><th class="bluerow"># Seizoenen</th><th class="bluerow"># Afleveringen</th><th class="bluerow">Status</th><th class="bluerow">Score</th><th class="bluerow"># Favorieten</th></tr>';
-        var tableEnd              = '</tbody></table>';
+        var loadingRow = '<tr id="loadingRows"><td colspan="7" style="text-align: center;"><img src="http://cdn.bierdopje.eu/g/if/facebox/loading.gif" style="vertical-align: middle;" />&nbsp;&nbsp;&nbsp;<span style="vertical-align: middle;">Series laden...</span></td></tr>';
         
-        var loadingRow            = '<tr id="loadingRows"><td colspan="7" style="text-align: center;"><img src="http://cdn.bierdopje.eu/g/if/facebox/loading.gif" style="vertical-align: middle;" />&nbsp;&nbsp;&nbsp;<span style="vertical-align: middle;">Series laden...</span></td></tr>';
-        
-        contentDiv.append(letterPaginationStart);
-        contentDiv.append(letterPaginationEnd);
         contentDiv.append(paginationStart);
         contentDiv.append(paginationEnd);
         contentDiv.append(tableStart);
         
         // Data accessors after insertion
-        var letterPaginationData = $(".letterPagination");
-        var paginationData       = $(".numberPagination");
-        var startShowTable       = $("#startShowTable");
-        var tableData            = $('#tableData');
+        var paginationData  = $("#pagination");
+        var startShowTable  = $("#startShowTable");
+        var tableData       = $('#tableData');
         
         tableData.append(tableHeaders);
         tableData.append(loadingRow);
@@ -95,7 +89,7 @@ $(function() {
         if (window.location.href.indexOf("/finished/") > -1) {
             var url = window.location.href;
             var reg = /finished\/(?!page)([a-z|A-Z|0-9])/.exec(url);
-            if (reg) {
+            if (reg != null) {
                 return reg[1];
             }
         }
@@ -130,9 +124,8 @@ $(function() {
             var pages     = getPageAmount(showCount);
             
             console.log("Great! I've found " + showCount + " shows.");
-            console.log("Will be putting that on " + pages + " page(s). " + SHOWS_PER_PAGE + " on each page.");
+            console.log("Will be putting that on " + pages + " pages. " + SHOWS_PER_PAGE + " on each page.");
             
-            addLetterPagination(prefix);
             addPagination(prefix, pages);
             
             console.log("Crushing all that show data now. Just for you!");
@@ -171,13 +164,6 @@ $(function() {
     }
     
     function startsWith(str, prefix) {
-        // Special
-        if (prefix === "0") {
-            if (!isNaN(+str.charAt(0))) {
-                return str;
-            }
-        }
-        
         str = str.toLowerCase();
         prefix = prefix.toLowerCase();
         
@@ -185,33 +171,6 @@ $(function() {
             return str;
         }
         return "";
-    }
-    
-    function addLetterPagination(prefix) {
-        var letterArray = ["0-9", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "Alle"];
-        $.each(letterArray, function(index, value) {
-            // Handle specials
-            if (index === 0) {
-                if (prefix === "0") {
-                    prefix = letterArray[0];
-                    letterPaginationData.append('<li class="active">' + prefix + '</li>');
-                } else {
-                    letterPaginationData.append('<li><a href="/shows/finished/0">' + letterArray[0] + '</a></li>');
-                }
-            } else if (index === letterArray.length - 1) {
-                if (!prefix) {
-                    letterPaginationData.append('<li class="active">' + letterArray[index] + '</li>');
-                } else {
-                    letterPaginationData.append('<li><a href="/shows/finished/">' + letterArray[index] + '</a></li>');
-                }
-            } else {
-                if (value === prefix) {
-                    letterPaginationData.append('<li class="active">' + value.toUpperCase() + '</li>');
-                } else {
-                    letterPaginationData.append('<li><a data-letterpage="' + value + '" class="changeLetterPage" href="/shows/finished/' + value + '">' + value.toUpperCase() + '</a></li>');
-                }
-            }
-        });
     }
     
     function addPagination(prefix, pages) {

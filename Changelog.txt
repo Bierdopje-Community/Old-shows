@@ -1,5 +1,12 @@
 Bierdopje Old Shows Changelog
 
+Version 2.0 (26 January 2016)
+- Added pagination.
+- Added choosable letters.
+- Extracted TheTVDB to use as source.
+- Houtevelts Bierdopje API is now being used to redirect.
+- Refactored code (introduced new functions)
+
 Version 1.1 (22 January 2016)
 - Used Houtevelts Bierdopje API to quickly get show information.
 
