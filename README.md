@@ -1,5 +1,5 @@
 # Bierdopje Old Shows Overview
-Adds a menu which loads includes a brand new page for the older (finished) shows.
+Adds a menu which includes a brand new page for the older (finished) shows.
 <BR/>
 Enjoy.
 <BR/><BR/>
