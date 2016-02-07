@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bierdopje Old Shows
 // @namespace    http://www.bierdopje.com/
-// @version      2.1
+// @version      2.0
 // @description  Adds a menu which loads includes a brand new page for the older (finished) shows.
 // @match        http://*.bierdopje.com/shows
 // @match        http://*.bierdopje.com/shows/
@@ -20,8 +20,8 @@
 // ==/UserScript==
 
 $(function() {
-    var showURL            = 'http://www.bierdopje.com/shows/';
-    var sourceJSON         = 'https://raw.githubusercontent.com/Bierdopje-Community/old-shows/master/show_data/bierdopje_series.json';
+    var BD_API_URL         = 'https://bierdopje-api.houtevelts.com';
+    var sourceJSON         = 'https://raw.githubusercontent.com/Bierdopje-Community/old-shows/master/show_data/thetvdb_series.json';
     var SHOWS_PER_PAGE     = 50;
     var PAGINATION_ITEMS   = 6;
     
@@ -81,6 +81,14 @@ $(function() {
         var loading = $("#loadingRows");
         
         getData(currentPage, prefix);
+        
+        // Button event handlers
+        tableData.on('click', '.getShow', function(e) {
+            e.preventDefault(); // Prevent going to the top of the page.
+            
+            var tvdbid = $(this).data('tvdbid');
+            getShowURL(tvdbid);
+        });
     }
     
     function getCurrentPrefixFromURL() {
@@ -131,21 +139,22 @@ $(function() {
             
             var startIndex = (currentPage * SHOWS_PER_PAGE) - SHOWS_PER_PAGE;
             
+            var currentURL = "#"; // Bierdopje show url.
+            
             for (var i = 0; i < SHOWS_PER_PAGE; i++, startIndex++) {
                 var j = startIndex;
                 if (typeof showData[j] != "undefined") {
-                    //var showtvdbId     = showData[j].tvdbId;
+                    var showtvdbId     = showData[j].tvdbId;
                     var showName       = showData[j].name;
-                    var currentURL     = showData[j].slug;
                     var showRuntime    = showData[j].runtime;
                     var showSeasons    = showData[j].seasons;
                     var showEpisodes   = showData[j].episodes;
                     var showStatus     = 'Afgelopen'; //showData[j].showstatus;
-                    var showScore      = showData[j].score;
-                    var showFavourites = showData[j].favorites;
+                    //var showScore      = showData[j].score;
+                    //var showFavourites = showData[j].favorites;
 
-                    var tableRow = '<tr class="show"><td><a href="' + showURL + currentURL + '">' + showName + '</a></td><td>' + showRuntime + '</td><td>' + showSeasons + '</td><td>' + showEpisodes + '</td><td>' + showStatus + '</td><td>' + showScore + '</td><td>' + showFavourites + '</td></tr>';
-                    //var tableRow = '<tr class="show"><td><a href="' + currentURL + '" class="getShow" data-tvdbid="' + showtvdbId + '">' + showName + '</a></td><td>' + showRuntime + '</td><td>' + showSeasons + '</td><td>' + showEpisodes + '</td><td>' + showStatus + '</td><td>-</td><td>-</td></tr>';
+                    //var tableRow = '<tr><td><a href="' + currentURL + '">' + showName + '</a></td><td>' + showRuntime + '</td><td>' + showSeasons + '</td><td>' + showEpisodes + '</td><td>' + showStatus + '</td><td>' + showScore + '</td><td>' + showFavourites + '</td></tr>';
+                    var tableRow = '<tr class="show"><td><a href="' + currentURL + '" class="getShow" data-tvdbid="' + showtvdbId + '">' + showName + '</a></td><td>' + showRuntime + '</td><td>' + showSeasons + '</td><td>' + showEpisodes + '</td><td>' + showStatus + '</td><td>-</td><td>-</td></tr>';
                     tableData.append(tableRow);
                 }
             }
@@ -255,5 +264,21 @@ $(function() {
                 paginationData.append('<li><a data-page="' + i + '" class="changePage" href="/shows/finished/page/' + i + '">' + i + '</a></li>');
             }
         }
+    }
+    
+    function getShowURL(tvdbid) {
+        var url;
+        $.getJSON(BD_API_URL + '/GetShowByTVDBID/' + tvdbid, function(show) {
+            url = show.link;
+        }).done(function() {
+            if (typeof url != "undefined") {
+                console.log("Redirecting to " + url + "...");
+                window.location.href = url;
+            } else {
+                console.log("Show does not exist on Bierdopje.com");
+            }
+        }).fail(function() {
+            console.log("Could not get show information.");
+        });
     }
 });
