@@ -5,6 +5,8 @@ Enjoy.
 <BR/><BR/>
 Version <strong>2.1</strong>
 
+<A HREF="https://github.com/Bierdopje-Community/old-shows/raw/master/BierdopjeOldShows.user.js">INSTALL</A>
+
 Screenshot:<BR/>
 ![Version 2.1](https://raw.githubusercontent.com/Bierdopje-Community/old-shows/master/Screenshots/v2.1.png "Version 2.1")
 
