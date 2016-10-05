@@ -3,6 +3,7 @@
 // @namespace    http://www.bierdopje.com/
 // @version      2.1
 // @description  Adds a menu which loads includes a brand new page for the older (finished) shows.
+// @updateURL 	 https://github.com/Bierdopje-Community/old-shows/raw/master/BierdopjeOldShows.user.js
 // @match        http://*.bierdopje.com/shows
 // @match        http://*.bierdopje.com/shows/
 // @match        http://*.bierdopje.com/shows/page/*
