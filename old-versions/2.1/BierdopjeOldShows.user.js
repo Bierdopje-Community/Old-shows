@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bierdopje Old Shows
 // @namespace    http://www.bierdopje.com/
-// @version      2.1.1
+// @version      2.1
 // @description  Adds a menu which loads includes a brand new page for the older (finished) shows.
 // @updateURL 	 https://github.com/Bierdopje-Community/old-shows/raw/master/BierdopjeOldShows.user.js
 // @match        http://*.bierdopje.com/shows
@@ -12,6 +12,7 @@
 // @match        http://*.bierdopje.com/shows/finished
 // @match        http://*.bierdopje.com/shows/finished/
 // @match        http://*.bierdopje.com/shows/finished/*
+// @run-at       document-start
 // @grant        unsafeWindow
 // @require      http://code.jquery.com/jquery-1.10.2.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/linq.js/2.2.0.2/linq.min.js

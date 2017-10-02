@@ -1,5 +1,8 @@
 Bierdopje Old Shows Changelog
 
+Version 2.1.1 (2 October 2017)
+- Faster loading.
+
 Version 2.1 (7 February 2016)
 - Added another source for series (as main source).
 - Removed Houtevelts Bierdopje API as it is not needed anymore.
